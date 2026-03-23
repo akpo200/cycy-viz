@@ -1,18 +1,40 @@
 from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
-import plotly.express as px
+from .callbacks import register_callbacks
+from utils.data_loader import get_assurance_data
 
 def init_assurance_app(flask_server):
     """
-    Dashboard Dash — Secteur Assurance (Sénégal).
-    Stub préparé pour intégration future des données CIMA / FANAF.
-    Monté sur /assurance/ via Flask.
+    Initialise le dashboard Dash Bancaire (Mode Clair) avec :
+    - Sidebar fixe à gauche
+    - 2 onglets principaux : Vue Macro / Analyse Micro
+    - Footer avec Copyright
     """
+    df_init = get_assurance_data()
+
+    # --- Chargement Options dropdowns ---
+    bank_options = [{'label': 'Toutes les Compagnies', 'value': 'TOUTES'}]
+    if not df_init.empty and 'Sigle' in df_init.columns:
+        banks = sorted(df_init['Sigle'].dropna().unique())
+        bank_options += [{'label': b, 'value': b} for b in banks]
+
+    year_options = [{'label': 'Toutes les années', 'value': 'TOUTES'}]
+    if not df_init.empty and 'ANNEE' in df_init.columns:
+        years = sorted(df_init['ANNEE'].dropna().unique(), reverse=True)
+        year_options += [{'label': int(y), 'value': int(y)} for y in years]
+
+    group_options = [{'label': 'Tous les groupes', 'value': 'TOUS'}]
+    if not df_init.empty and 'Goupe_Bancaire' in df_init.columns:
+        groups = sorted(df_init['Goupe_Bancaire'].dropna().unique())
+        group_options += [{'label': g, 'value': g} for g in groups]
+
+    focus_default = bank_options[1]['value'] if len(bank_options) > 1 else 'TOUTES'
+
     dash_app = Dash(
         __name__,
         server=flask_server,
         url_base_pathname='/assurance/',
-        title="Insurance Intelligence Platform",
+        title="Risk & Portfolio Analytics",
         external_stylesheets=[
             dbc.themes.BOOTSTRAP,
             "https://use.fontawesome.com/releases/v5.15.4/css/all.css"
@@ -20,104 +42,126 @@ def init_assurance_app(flask_server):
         suppress_callback_exceptions=True
     )
 
-    # Graphique placeholder
-    fig_placeholder = px.bar(
-        x=["SAAR", "NSIA", "SONAM", "AXA SENEGAL", "SAHAM"],
-        y=[28500, 24300, 19700, 15200, 11800],
-        title="Primes Émises par Compagnie d'Assurance (données illustratives, M FCFA)",
-        color_discrete_sequence=["#8b5cf6"]
-    )
-    fig_placeholder.update_layout(
-        template="plotly_white",
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        font={'family': 'Plus Jakarta Sans'},
-        xaxis={'title': ''},
-        yaxis={'title': 'M FCFA'}
-    )
-
     dash_app.layout = html.Div([
 
-        # Header
-        html.Div([
-            dbc.Container([
-                html.Div([
-                    html.H1("Insurance Intelligence Platform", className="text-center",
-                            style={"fontFamily": "Outfit, sans-serif", "fontWeight": "800",
-                                   "fontSize": "2.5rem", "color": "white"}),
-                    html.P("Analyse du Secteur Assurance au Sénégal",
-                           className="text-center mb-0",
-                           style={"color": "#c4b5fd", "fontWeight": "500"}),
-                ])
-            ])
-        ], style={
-            "background": "radial-gradient(circle at top left, #4c1d95 0%, #1e1b4b 100%)",
-            "padding": "4rem 0", "marginBottom": "-3rem"
-        }),
+        dcc.Download(id="download-pdf-report"),
 
-        dbc.Container([
-
+        # --- HEADER ---
+        html.Header([
             html.Div([
-                html.H4("Indicateurs Clés — Secteur Assurance",
-                        style={"fontFamily": "Outfit", "fontWeight": "700",
-                               "marginTop": "4rem", "marginBottom": "2rem",
-                               "color": "#1e1b4b"}),
-                dbc.Row([
-                    dbc.Col(dbc.Card([dbc.CardBody([
-                        html.H5("Primes Émises (M FCFA)", style={"fontSize": "0.75rem",
-                                                                   "textTransform": "uppercase",
-                                                                   "color": "#64748b"}),
-                        html.H3("186 420 M", style={"fontWeight": "800", "color": "#1e1b4b"})
-                    ])], style={"borderRadius": "20px", "border": "none",
-                                "boxShadow": "0 10px 25px rgba(0,0,0,0.05)",
-                                "textAlign": "center", "padding": "1rem"}),
-                        lg=3, md=6, className="mb-4"),
-
-                    dbc.Col(dbc.Card([dbc.CardBody([
-                        html.H5("Sinistres Réglés (M FCFA)", style={"fontSize": "0.75rem",
-                                                                     "textTransform": "uppercase",
-                                                                     "color": "#64748b"}),
-                        html.H3("98 750 M", style={"fontWeight": "800", "color": "#1e1b4b"})
-                    ])], style={"borderRadius": "20px", "border": "none",
-                                "boxShadow": "0 10px 25px rgba(0,0,0,0.05)",
-                                "textAlign": "center", "padding": "1rem"}),
-                        lg=3, md=6, className="mb-4"),
-
-                    dbc.Col(dbc.Card([dbc.CardBody([
-                        html.H5("Ratio Combiné (%)", style={"fontSize": "0.75rem",
-                                                             "textTransform": "uppercase",
-                                                             "color": "#64748b"}),
-                        html.H3("87.4 %", style={"fontWeight": "800", "color": "#8b5cf6"})
-                    ])], style={"borderRadius": "20px", "border": "none",
-                                "boxShadow": "0 10px 25px rgba(0,0,0,0.05)",
-                                "textAlign": "center", "padding": "1rem"}),
-                        lg=3, md=6, className="mb-4"),
-
-                    dbc.Col(dbc.Card([dbc.CardBody([
-                        html.H5("Capitaux Gérés (M FCFA)", style={"fontSize": "0.75rem",
-                                                                    "textTransform": "uppercase",
-                                                                    "color": "#64748b"}),
-                        html.H3("412 600 M", style={"fontWeight": "800", "color": "#10b981"})
-                    ])], style={"borderRadius": "20px", "border": "none",
-                                "boxShadow": "0 10px 25px rgba(0,0,0,0.05)",
-                                "textAlign": "center", "padding": "1rem"}),
-                        lg=3, md=6, className="mb-4"),
+                html.Div(html.I(className="fas fa-shield-alt"), className="header-icon"),
+                html.Div([
+                    html.H1("Risk & Portfolio Analytics"),
+                    html.P("Risk & Portfolio Analytics"),
                 ]),
-            ]),
+            ], className="header-content")
+        ], className="main-header"),
 
-            dbc.Card([
-                dbc.CardBody([
-                    dcc.Graph(figure=fig_placeholder, config={'displayModeBar': False})
-                ])
-            ], style={"borderRadius": "24px", "border": "none",
-                      "boxShadow": "0 10px 25px rgba(0,0,0,0.05)", "marginBottom": "3rem"}),
+        # --- BODY WRAPPER ---
+        html.Div([
 
-            dbc.Alert([
-                html.I(className="fas fa-tools mr-2"),
-                " Module en cours de développement — Intégration des données CIMA / FANAF prévue."
-            ], color="primary", className="text-center mb-5")
+            # --- SIDEBAR FIXE À GAUCHE ---
+            html.Aside([
+                html.Div([
+                    html.Div(html.I(className="fas fa-layer-group"), className="sidebar-logo"),
+                    html.H3("CIMA INSIGHT", className="sidebar-title"),
+                    html.P("Données Officielles", className="sidebar-subtitle"),
+                ], className="sidebar-brand"),
 
-        ], fluid=False)
-    ], style={"fontFamily": "Plus Jakarta Sans, sans-serif", "backgroundColor": "#f5f3ff"})
+                html.Label("Exercice d'Analyse", className="sidebar-label"),
+                dcc.Dropdown(id='year-filter', options=year_options, value='TOUTES', clearable=False, className="sidebar-dropdown"),
 
+                html.Label("Groupe Bancaire", className="sidebar-label"),
+                dcc.Dropdown(id='group-filter', options=group_options, value='TOUS', clearable=False, className="sidebar-dropdown"),
+
+                html.Label("Focus Établissement", className="sidebar-label"),
+                dcc.Dropdown(id='bank-filter', options=[o for o in bank_options if o['value'] != 'TOUTES'], value=focus_default, clearable=False, className="sidebar-dropdown"),
+
+                html.Div([
+                    dcc.Loading(id="loading-pdf", type="circle", color="#4f46e5", children=[
+                        dbc.Button([html.I(className="fas fa-file-pdf mr-2"), "Générer Rapport PDF"], id="btn-export-pdf", className="btn-sidebar-pdf w-100"),
+                    ]),
+                    html.Div(id="report-status", className="text-center mt-3", style={"fontSize": "0.7rem"})
+                ], className="sidebar-pdf-block"),
+
+            ], className="sidebar"),
+
+            # --- CONTENU PRINCIPAL ---
+            html.Main([
+                
+                # Navigation Onglets
+                html.Div([
+                    html.Button("VUE MACRO",     id="tab-macro",  n_clicks=0, className="tab-btn active"),
+                    html.Button("ANALYSE MICRO", id="tab-micro",  n_clicks=0, className="tab-btn"),
+                ], className="tab-bar"),
+
+                dcc.Store(id='active-tab', data='macro'),
+
+                # --- ONGLET 1: MACRO ---
+                html.Div([
+                    html.Div([
+                        html.H2("Vue Macro du Secteur", className="section-heading"),
+                        html.P(id="macro-subtitle", className="section-subheading"),
+                    ], className="tab-header"),
+
+                    dbc.Row([
+                        dbc.Col(html.Div([html.Span("Primes Total", className="kpi-label"), html.H3(id="kpi-bilan", className="kpi-value"), html.Span(id="kpi-bilan-growth", className="kpi-badge")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Fonds Propres", className="kpi-label"), html.H3(id="kpi-fp", className="kpi-value")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Fonds Propres", className="kpi-label"), html.H3(id="kpi-ressources", className="kpi-value")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Nb Compagnies", className="kpi-label"), html.H3(id="kpi-nb-Compagnies", className="kpi-value")], className="kpi-card"), md=3),
+                    ], className="g-3 mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(html.Div([html.H5("Évolution du Primes vs Fonds Propres", className="graph-title"), dcc.Graph(id='fig-line-evolution', config={'displayModeBar': False})], className="graph-card"), md=8),
+                        dbc.Col(html.Div([html.H5("Parts de Marché", className="graph-title"), dcc.Graph(id='fig-donut-marche', config={'displayModeBar': False})], className="graph-card"), md=4),
+                    ], className="g-3 mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(html.Div([html.H5("Positionnement (Primes)", className="graph-title"), dcc.Graph(id='fig-scatter-bilan', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=4),
+                        dbc.Col(html.Div([html.H5("Positionnement (Charge Sinistres)", className="graph-title"), dcc.Graph(id='fig-scatter-emploi', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=4),
+                        dbc.Col(html.Div([html.H5("Positionnement (Fonds Propres)", className="graph-title"), dcc.Graph(id='fig-scatter-ressources', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=4),
+                    ], className="g-3 mb-3"),
+                    
+                    dbc.Row([
+                        dbc.Col(html.Div([html.H5("Classement des Compagnies (Primes)", className="graph-title"), dcc.Graph(id='fig-bar-classement', config={'displayModeBar': False}, style={'height': '400px'})], className="graph-card"), md=12),
+                    ], className="g-3"),
+
+                ], id="tab-content-macro", className="tab-content"),
+
+                # --- ONGLET 2: MICRO ---
+                html.Div([
+                    html.Div([
+                        html.H2(id="micro-title", className="section-heading"),
+                        html.P("Analyse granulaire par Compagnie individuelle", className="section-subheading"),
+                    ], className="tab-header"),
+
+                    dbc.Row([
+                        dbc.Col(html.Div([html.Span("Primes", className="kpi-label"), html.H3(id="micro-kpi-bilan", className="kpi-value")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Résultat Net", className="kpi-label"), html.H3(id="micro-kpi-resultat", className="kpi-value")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Fonds Propres", className="kpi-label"), html.H3(id="micro-kpi-fp", className="kpi-value")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Fonds Propres", className="kpi-label"), html.H3(id="micro-kpi-ressources", className="kpi-value")], className="kpi-card"), md=3),
+                    ], className="g-3 mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(html.Div([html.H5("Diagnostic de Solidité", className="graph-title"), html.Div(id="micro-ratios-bars")], className="graph-card"), md=5),
+                        dbc.Col(html.Div([html.H5(id="micro-combo-title", className="graph-title"), dcc.Graph(id='fig-combo-historique', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=7),
+                    ], className="g-3 mb-3"),
+
+                    dbc.Row([
+                        dbc.Col(html.Div([html.H5("Radar de Performance", className="graph-title"), dcc.Graph(id='fig-radar-diagnostic', config={'displayModeBar': False}, style={'height': '400px'})], className="graph-card"), md=7),
+                        dbc.Col(html.Div([html.H5("Informations Clés", className="graph-title"), html.Div(id="micro-infos-complementaires"), html.Hr(), dcc.Graph(id='fig-gauge-pdm', config={'displayModeBar': False}, style={'height': '220px'})], className="graph-card"), md=5),
+                    ], className="g-3")
+                ], id="tab-content-micro", className="tab-content", style={"display": "none"}),
+
+            ], className="main-content")
+        ], className="dashboard-body"),
+
+        # --- FOOTER ---
+        html.Footer([
+            html.P("Copyright © 2026 — Tous droits réservés. Créé par Nancy AKPO"),
+        ], className="dashboard-footer")
+
+    ], className="dashboard-wrapper")
+
+    register_callbacks(dash_app)
     return dash_app

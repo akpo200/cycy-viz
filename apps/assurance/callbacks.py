@@ -1,5 +1,5 @@
 """
-apps/banking/callbacks.py
+apps/assurance/callbacks.py
 --------------------------
 Tous les callbacks pour le dashboard bancaire :
 1. switch_tab           : Basculer entre Vue Macro et Analyse Micro
@@ -13,17 +13,17 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
-from utils.data_loader import get_banking_data
+from utils.data_loader import get_assurance_data
 from utils.map_utils import create_senegal_map
 from utils.pdf_report import generate_full_report
 import traceback
 import base64
 
 # Chargement unique des données au démarrage
-df_full = get_banking_data()
+df_full = get_assurance_data()
 
-# Palette Premium Étendue (pour inclure de nombreuses banques)
-PALETTE = ['#4f46e5', '#d97706', '#10b981', '#ef4444',
+# Palette Premium Étendue (pour inclure de nombreuses Compagnies)
+PALETTE = ['#4f46e5', '#8b5cf6', '#10b981', '#ef4444',
            '#8b5cf6', '#06b6d4', '#f59e0b', '#3b82f6',
            '#a855f7', '#84cc16', '#eab308', '#14b8a6',
            '#fb923c', '#38bdf8', '#6366f1', '#ec4899',
@@ -51,7 +51,7 @@ _MARGIN = dict(t=40, b=40, l=40, r=20)
 def _filter_df(bank=None, year=None, group=None, focus=None):
     """
     Retourne une copie filtrée du DataFrame global.
-    focus = banque spécifique (pour Analyse Micro)
+    focus = Compagnie spécifique (pour Analyse Micro)
     """
     df = df_full.copy()
 
@@ -65,7 +65,7 @@ def _filter_df(bank=None, year=None, group=None, focus=None):
 
     print(f"DEBUG FILTER: after year/group filters, len(df)={len(df)}")
 
-    # Filtre Focus banque (Analyse Micro uniquement)
+    # Filtre Focus Compagnie (Analyse Micro uniquement)
     if focus and focus != 'TOUTES' and focus != 'TOUS':
         df_bank = df_full[df_full['Sigle'].str.upper() == str(focus).upper()]
         # Optionnel: on peut aussi filtrer df_bank par année si on veut restreindre l'historique
@@ -85,11 +85,11 @@ def _fmt(v, force_millions=False):
 
 def _calc_ratios(d):
     """Calcule les ratios prudentiels depuis un DataFrame."""
-    bilan = pd.to_numeric(d['BILAN'], errors='coerce').fillna(0).sum()
-    emploi = pd.to_numeric(d['EMPLOI'], errors='coerce').fillna(0).sum() if 'EMPLOI' in d.columns else 0
-    ress = pd.to_numeric(d['RESSOURCES'], errors='coerce').fillna(0).sum() if 'RESSOURCES' in d.columns else 0
-    res = pd.to_numeric(d['RESULTAT.NET'], errors='coerce').fillna(0).sum() if 'RESULTAT.NET' in d.columns else 0
-    fp = pd.to_numeric(d['FONDS.PROPRE'], errors='coerce').fillna(0).sum() if 'FONDS.PROPRE' in d.columns else 0
+    bilan = pd.to_numeric(d['Bilan'], errors='coerce').fillna(0).sum()
+    emploi = pd.to_numeric(d['Emploi'], errors='coerce').fillna(0).sum() if 'Emploi' in d.columns else 0
+    ress = pd.to_numeric(d['Ressources'], errors='coerce').fillna(0).sum() if 'Ressources' in d.columns else 0
+    res = pd.to_numeric(d['Resultat'], errors='coerce').fillna(0).sum() if 'Resultat' in d.columns else 0
+    fp = pd.to_numeric(d['Fonds Propres'], errors='coerce').fillna(0).sum() if 'Fonds Propres' in d.columns else 0
     solv = (fp / bilan * 100) if bilan > 0 else 0
     roe = (res / fp * 100) if fp > 0 else 0
     roa = (res / bilan * 100) if bilan > 0 else 0
@@ -132,7 +132,7 @@ def register_callbacks(dash_app):
          Output('kpi-bilan-growth',   'children'),
          Output('kpi-fp',             'children'),
          Output('kpi-ressources',     'children'),
-         Output('kpi-nb-banques',     'children'),
+         Output('kpi-nb-Compagnies',     'children'),
          Output('macro-subtitle',     'children'),
          Output('fig-line-evolution', 'figure'),
          Output('fig-donut-marche',   'figure'),
@@ -155,15 +155,15 @@ def register_callbacks(dash_app):
                 return ["N/A"] * 5 + [subtitle] + [ef] * 6
 
             r = _calc_ratios(df)
-            nb_banques = df['Sigle'].nunique()
+            nb_Compagnies = df['Sigle'].nunique()
 
-            # --- Croissance Bilan (vs année précédente) ---
+            # --- Croissance Primes (vs année précédente) ---
             growth_txt = ""
             if 'ANNEE' in df_full.columns and year and year != 'TOUTES':
                 prev_year = int(year) - 1
                 df_prev = df_full[df_full['ANNEE'] == prev_year]
                 if not df_prev.empty:
-                    prev_bilan = pd.to_numeric(df_prev['BILAN'], errors='coerce').fillna(0).sum()
+                    prev_bilan = pd.to_numeric(df_prev['Bilan'], errors='coerce').fillna(0).sum()
                     if prev_bilan > 0:
                         g = (r['bilan'] - prev_bilan) / prev_bilan * 100
                         growth_txt = f"+{g:.1f}%" if g >= 0 else f"{g:.1f}%"
@@ -176,18 +176,18 @@ def register_callbacks(dash_app):
                 grp = df_full.copy()
                 if group and group != 'TOUS' and 'Goupe_Bancaire' in grp.columns:
                     grp = grp[grp['Goupe_Bancaire'] == group]
-                evo = grp.groupby('ANNEE')[['BILAN', 'RESSOURCES']].sum().reset_index().sort_values('ANNEE')
+                evo = grp.groupby('ANNEE')[['Bilan', 'Ressources']].sum().reset_index().sort_values('ANNEE')
                 fig_line.add_trace(go.Scatter(
-                    x=evo['ANNEE'], y=evo['BILAN'] / 1_000,
-                    name='Bilan Total', mode='lines+markers',
-                    line=dict(color='#d97706', width=3),
+                    x=evo['ANNEE'], y=evo['Bilan'] / 1_000,
+                    name='Primes Total', mode='lines+markers',
+                    line=dict(color='#8b5cf6', width=3),
                     marker=dict(size=8),
                     fill='tozeroy', fillcolor='rgba(217,119,6,0.05)'
                 ))
-                if 'RESSOURCES' in evo.columns:
+                if 'Ressources' in evo.columns:
                     fig_line.add_trace(go.Scatter(
-                        x=evo['ANNEE'], y=evo['RESSOURCES'] / 1_000,
-                        name='Ressources', mode='lines+markers',
+                        x=evo['ANNEE'], y=evo['Ressources'] / 1_000,
+                        name='Fonds Propres', mode='lines+markers',
                         line=dict(color='#4f46e5', width=2.5, dash='dot'),
                         marker=dict(size=7)
                     ))
@@ -201,20 +201,20 @@ def register_callbacks(dash_app):
             # ----------------------------------------------------------------
             # FIG 2 — Donut parts de marché (groupés par Goupe_Bancaire si dispo)
             # ----------------------------------------------------------------
-            group_col = 'Sigle' # On force le sigle pour voir toutes les banques individuellement
-            pdm_df = df.groupby(group_col)['BILAN'].sum().reset_index()
-            pdm_df.columns = ['Label', 'BILAN']
-            pdm_df = pdm_df.sort_values('BILAN', ascending=False)
+            group_col = 'Sigle' # On force le sigle pour voir toutes les Compagnies individuellement
+            pdm_df = df.groupby(group_col)['Bilan'].sum().reset_index()
+            pdm_df.columns = ['Label', 'Bilan']
+            pdm_df = pdm_df.sort_values('Bilan', ascending=False)
             
             fig_donut = go.Figure(go.Pie(
                 labels=pdm_df['Label'],
-                values=pdm_df['BILAN'],
+                values=pdm_df['Bilan'],
                 hole=0.6,
                 marker=dict(colors=PALETTE,
                             line=dict(color='#ffffff', width=2)),
                 textinfo='percent',
                 textfont=dict(size=10),
-                hovertemplate='<b>%{label}</b><br>Bilan : %{value:,.0f} M<br>Part : %{percent}<extra></extra>'
+                hovertemplate='<b>%{label}</b><br>Primes : %{value:,.0f} M<br>Part : %{percent}<extra></extra>'
             ))
             fig_donut.add_annotation(
                 text='MARCHÉ', showarrow=False,
@@ -229,7 +229,7 @@ def register_callbacks(dash_app):
             # TCAM helper (taux de croissance annuel moyen)
             # ----------------------------------------------------------------
             def compute_tcam(col):
-                """Calcule le TCAM et la part de marché finale pour chaque banque."""
+                """Calcule le TCAM et la part de marché finale pour chaque Compagnie."""
                 if 'ANNEE' not in df_full.columns or col not in df_full.columns:
                     return pd.DataFrame(columns=['Sigle', 'PDM', 'TCAM'])
                 g = (df_full.groupby(['Sigle', 'ANNEE'])[col]
@@ -265,7 +265,7 @@ def register_callbacks(dash_app):
                                 line_color='rgba(148,163,184,0.4)', line_dash='dot')
                 # Points
                 for _, row in tcam_df.iterrows():
-                    col_pt = '#d97706' if row['TCAM'] > 0 and row['PDM'] > tcam_df['PDM'].median() else '#4f46e5'
+                    col_pt = '#8b5cf6' if row['TCAM'] > 0 and row['PDM'] > tcam_df['PDM'].median() else '#4f46e5'
                     fig_s.add_trace(go.Scatter(
                         x=[row['PDM']], y=[row['TCAM']],
                         mode='markers+text',
@@ -285,12 +285,12 @@ def register_callbacks(dash_app):
                 )
                 return fig_s
 
-            fig_sc_bilan     = scatter_tcam('BILAN',     'Bilan')
-            fig_sc_emploi    = scatter_tcam('EMPLOI',    'Emplois')
-            fig_sc_ressources = scatter_tcam('RESSOURCES', 'Ressources')
+            fig_sc_bilan     = scatter_tcam('Bilan',     'Primes')
+            fig_sc_emploi    = scatter_tcam('Emploi',    'Charge Sinistres')
+            fig_sc_ressources = scatter_tcam('Ressources', 'Fonds Propres')
 
             # --- Classement horizontal ---
-            rank = (df.groupby('Sigle')['BILAN']
+            rank = (df.groupby('Sigle')['Bilan']
                       .sum().sort_values(ascending=True).tail(12))
             fig_rank = go.Figure(go.Bar(
                 x=rank.values / 1_000,
@@ -298,20 +298,20 @@ def register_callbacks(dash_app):
                 orientation='h',
                 marker=dict(
                     color=rank.values,
-                    colorscale=[[0, '#4f46e5'], [1, '#d97706']],
+                    colorscale=[[0, '#4f46e5'], [1, '#8b5cf6']],
                     line=dict(width=0)
                 ),
                 hovertemplate='<b>%{y}</b><br>%{x:,.0f} K FCFA<extra></extra>'
             ))
             fig_rank.update_layout(**BASE_LAYOUT, font=_FONT, **_AXES,
-                xaxis_title='Total Bilan (Milliards FCFA)',
+                xaxis_title='Total Primes (Milliards FCFA)',
                 margin=dict(t=20, b=40, l=80, r=20)
             )
 
             return (
                 _fmt(r['bilan']), growth_txt,
                 _fmt(r['fp']), _fmt(r['ress']),
-                str(nb_banques), subtitle,
+                str(nb_Compagnies), subtitle,
                 fig_line, fig_donut,
                 fig_sc_bilan, fig_sc_emploi, fig_sc_ressources,
                 fig_rank
@@ -343,19 +343,19 @@ def register_callbacks(dash_app):
          Input('group-filter', 'value')]
     )
     def update_micro(bank, year, group):
-        """Recalcule tous les éléments de l'Analyse Micro pour la banque choisie."""
+        """Recalcule tous les éléments de l'Analyse Micro pour la Compagnie choisie."""
         try:
             df, _ = _filter_df(year=year, group=group, focus=None) # df for sector calculation
             print(f"DEBUG MICRO: bank={bank}, year={year}, group={group}")
 
-            # On prend TOUTE l'histoire de la banque pour les graphiques,
+            # On prend TOUTE l'histoire de la Compagnie pour les graphiques,
             # mais on filtre l'année pour les KPIs
             df_bank_all = df_full[df_full['Sigle'].str.upper() == str(bank).upper()]
             
             if df_bank_all.empty:
                 print(f"⚠ Analyse Micro : Aucune donnée trouvée pour {bank}")
                 ef = go.Figure().update_layout(**BASE_LAYOUT, font=_FONT)
-                return ["ANALYSE MICRO", "Aucune donnée", "N/A", "N/A", "N/A", "N/A", [], "Banque inconnue", ef, ef, ef]
+                return ["ANALYSE MICRO", "Aucune donnée", "N/A", "N/A", "N/A", "N/A", [], "Compagnie inconnue", ef, ef, ef]
 
             # Filtrage de l'année pour les KPIs
             df_bank_year = df_bank_all.copy()
@@ -370,9 +370,9 @@ def register_callbacks(dash_app):
             # Utilisation du DataFrame filtré pour le calcul du secteur
             r_sect = _calc_ratios(df) 
             title = f"ANALYSE MICRO — FOCUS SUR {str(bank).upper()}"
-            combo_title = f"Croissance Historique | {str(bank)}"
+            combo_title = f"Historique des Primes | {str(bank)}"
 
-            # --- KPIs (Unité: Md CFA pour Bilan, M CFA pour Résultat) ---
+            # --- KPIs (Unité: Md CFA pour Primes, M CFA pour Résultat) ---
             bilan_val = _fmt(r_bank['bilan'])
             res_val = _fmt(r_bank['res'], force_millions=True)
             fp_val = _fmt(r_bank['fp'])
@@ -396,7 +396,7 @@ def register_callbacks(dash_app):
                     html.Tr([html.Td("Siège :", className="info-label"),
                              html.Td("Dakar, Sénégal", className="info-value")]),
                     html.Tr([html.Td("Part de Marché :", className="info-label"),
-                             html.Td(f"{r_bank['bilan']/r_sect['bilan']*100:.1f}% du Bilan" if r_sect['bilan'] > 0 else "N/A",
+                             html.Td(f"{r_bank['bilan']/r_sect['bilan']*100:.1f}% du Primes" if r_sect['bilan'] > 0 else "N/A",
                                      className="info-value kpi-gold")]),
                 ], className="info-table")
             ])
@@ -422,33 +422,33 @@ def register_callbacks(dash_app):
             ], style={"padding": "0.5rem"})
 
             # ----------------------------------------------------------------
-            # FIG Combo Historique (Barre Bilan + Ligne Résultat Net)
+            # FIG Combo Historique (Barre Primes + Ligne Résultat Net)
             # ----------------------------------------------------------------
             df_hist = df_bank_all.copy()
             fig_combo = go.Figure()
             if 'ANNEE' in df_hist.columns:
-                hist = (df_hist.groupby('ANNEE')[['BILAN', 'RESULTAT.NET']]
+                hist = (df_hist.groupby('ANNEE')[['Bilan', 'Resultat']]
                         .sum().reset_index().sort_values('ANNEE'))
-                # Barres Bilan
+                # Barres Primes
                 fig_combo.add_trace(go.Bar(
                     x=hist['ANNEE'].astype(int),
-                    y=hist['BILAN'] / 1_000,
-                    name='Bilan (Md)',
+                    y=hist['Bilan'] / 1_000,
+                    name='Primes (Md)',
                     marker=dict(color='#4f46e5', opacity=0.8, line=dict(width=0))
                 ))
                 # Ligne Résultat Net (axe secondaire)
                 fig_combo.add_trace(go.Scatter(
                     x=hist['ANNEE'].astype(int),
-                    y=hist['RESULTAT.NET'], # On garde en Millions pour plus de détail
+                    y=hist['Resultat'], # On garde en Millions pour plus de détail
                     name='Résultat Net (M)',
                     yaxis='y2',
                     mode='lines+markers',
-                    line=dict(color='#d97706', width=2.5),
+                    line=dict(color='#8b5cf6', width=2.5),
                     marker=dict(size=8)
                 ))
             fig_combo.update_layout(
                 **BASE_LAYOUT, font=_FONT,
-                yaxis=dict(title='Bilan (Milliards FCFA)', gridcolor='#f1f5f9',
+                yaxis=dict(title='Primes (Milliards FCFA)', gridcolor='#f1f5f9',
                            zeroline=False),
                 yaxis2=dict(title='Résultat Net (Millions FCFA)', overlaying='y', side='right',
                              gridcolor='rgba(0,0,0,0)', zeroline=False),
@@ -509,11 +509,11 @@ def register_callbacks(dash_app):
             fig_gauge = go.Figure(go.Indicator(
                 mode="gauge+number",
                 value=pdm_val,
-                number=dict(suffix="%", font=dict(size=28, color='#d97706')),
+                number=dict(suffix="%", font=dict(size=28, color='#8b5cf6')),
                 gauge=dict(
                     axis=dict(range=[0, 30], tickcolor='#94a3b8',
                               tickfont=dict(size=8, color='#64748b')),
-                    bar=dict(color='#d97706', thickness=0.4),
+                    bar=dict(color='#8b5cf6', thickness=0.4),
                     bgcolor='rgba(0,0,0,0)',
                     bordercolor='#e2e8f0',
                     steps=[
@@ -565,7 +565,7 @@ def register_callbacks(dash_app):
 
             print(f"✅ Génération PDF pour : {safe_bank} | {year_str}")
             pdf_bytes = generate_full_report(df, bank, year)
-            filename = f"Rapport_BCEAO_{safe_name}_{year_str}.pdf"
+            filename = f"Rapport_ASSURANCE_{safe_name}_{year_str}.pdf"
             # Encodage Base64 manuel pour assurer la compatibilité totale
             content_b64 = base64.b64encode(pdf_bytes).decode('utf-8')
             

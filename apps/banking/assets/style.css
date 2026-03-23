@@ -1,0 +1,286 @@
+/* assets/style.css — LIGHT PREMIUM Banking Dashboard */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;700;800&display=swap');
+
+:root {
+    --bg-page: #f8fafc;
+    /* Slate 50 */
+    --bg-card: #ffffff;
+    --bg-sidebar: #ffffff;
+    --text-main: #0f172a;
+    /* Slate 900 */
+    --text-muted: #64748b;
+    /* Slate 500 */
+    --accent: #4f46e5;
+    /* Indigo 600 */
+    --accent-light: #e0e7ff;
+    /* Indigo 100 */
+    --gold: #d97706;
+    /* Amber 600 */
+    --success: #10b981;
+    --border: #e2e8f0;
+    /* Slate 200 */
+    --radius: 16px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Base reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-page) !important;
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+}
+
+.dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header */
+.main-header {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+}
+
+.main-header h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-main);
+}
+
+.main-header p {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+/* Body Layout */
+.dashboard-body {
+    display: flex;
+    flex: 1;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-logo {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-light);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+}
+
+.sidebar-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.1rem;
+}
+
+.sidebar-subtitle {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.sidebar-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.4rem;
+    margin-top: 1.25rem;
+}
+
+/* Sidebar dropdowns */
+.sidebar-dropdown .Select-control {
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    background: #f8fafc !important;
+}
+
+.btn-sidebar-pdf {
+    background: var(--gold) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: white !important;
+    font-weight: 700 !important;
+    margin-top: 2rem !important;
+    padding: 0.75rem !important;
+    box-shadow: 0 4px 6px rgba(217, 119, 6, 0.2) !important;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    background: var(--bg-page);
+}
+
+.tab-bar {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 0.25rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+    border: none;
+    background: transparent;
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.tab-btn.active {
+    background: white;
+    color: var(--accent);
+    box-shadow: var(--shadow);
+}
+
+/* Sections */
+.section-heading {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+    color: var(--text-main);
+}
+
+.section-subheading {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+/* Cards */
+.kpi-card,
+.graph-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+}
+
+.kpi-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.kpi-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem !important;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0.25rem 0 !important;
+}
+
+.kpi-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--success);
+}
+
+.graph-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    margin-bottom: 1rem;
+    color: var(--text-main);
+    border-left: 3px solid var(--accent);
+    padding-left: 0.75rem;
+}
+
+/* Footers */
+.dashboard-footer {
+    padding: 1rem 2rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    background: white;
+}
+
+/* Specific ratio bars for light mode */
+.ratio-bar-bg {
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 4px 0 8px;
+}
+
+.ratio-bar-fill {
+    height: 100%;
+    background: var(--accent);
+}
+
+.ratio-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.ratio-val {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--gold);
+}
+
+.ratio-avg {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}

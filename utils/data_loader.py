@@ -43,9 +43,9 @@ def get_banking_data():
     df_mongo = pd.DataFrame()
     try:
         from pymongo import MongoClient
-        # serverSelectionTimeoutMS = 2000ms pour ne pas bloquer le démarrage
+        # serverSelectionTimeoutMS = 100ms pour ne pas bloquer le démarrage
         client = MongoClient('mongodb://localhost:27017/',
-                             serverSelectionTimeoutMS=2000)
+                             serverSelectionTimeoutMS=100)
         # Ping rapide pour vérifier si MongoDB répond
         client.admin.command('ping')
 
@@ -120,3 +120,43 @@ def get_banking_data():
     df_final = pd.concat([excel_histo, df_backup], ignore_index=True)
     print(f"Dashboard pret : {len(df_final)} entrees | {df_final['Sigle'].nunique()} banques distinctes")
     return df_final
+
+
+import numpy as np
+
+def _gen_fake_data(sector):
+    if sector == "assurance":
+        names = ["SONAM", "AXA", "ALLIANZ", "SUNU", "SAHAM", "NSIA"]
+        group_field = "Goupe_Bancaire"
+    elif sector == "energie":
+        names = ["SENELEC", "SAR", "TOTAL", "VIVO", "OILY", "SOLAR_SEN"]
+        group_field = "Goupe_Bancaire"
+    elif sector == "hospitalier":
+        names = ["DALAL JAMM", "H. PRINCIPAL", "FANN", "LE DANTEC", "CTO", "ABASS NDAO"]
+        group_field = "Goupe_Bancaire"
+        
+    data = []
+    for y in range(2015, 2023):
+        for n in names:
+            base = np.random.randint(50000, 300000)
+            data.append({
+                "Sigle": n,
+                "ANNEE": y,
+                "Bilan": int(base * (1 + (y-2015)*0.1)),
+                "Emploi": int(base * 0.6),
+                "Ressources": int(base * 0.8),
+                "Fonds Propres": int(base * 0.2),
+                "Resultat": int(base * 0.05),
+                group_field: "Public" if n in names[:2] else "Privé",
+                "EFFECTIF": np.random.randint(100, 1000)
+            })
+    return pd.DataFrame(data)
+
+def get_assurance_data():
+    return _gen_fake_data("assurance")
+
+def get_energie_data():
+    return _gen_fake_data("energie")
+
+def get_hospitalier_data():
+    return _gen_fake_data("hospitalier")

@@ -43,28 +43,30 @@ def create_senegal_map(df):
     fig = go.Figure(go.Scattermapbox(
         lat=lats,
         lon=lons,
-        mode='markers',
+        mode='markers+text',
         marker=go.scattermapbox.Marker(
             size=sizes, 
-            color='#1a237e',
-            opacity=0.7,
+            color='#6366f1',
+            opacity=0.75,
             showscale=False
         ),
         text=names,
         hoverinfo='text',
-        name="Emplacement Stratégique"
+        hoverlabel=dict(bgcolor='#1e293b', font_size=13, font_family='Plus Jakarta Sans', font_color='white')
     ))
 
     fig.update_layout(
-        mapbox_style="carto-positron",
+        mapbox_style="carto-darkmatter",
         hovermode='closest',
         mapbox=dict(
             bearing=0,
             center=go.layout.mapbox.Center(lat=14.685, lon=-17.445),
-            pitch=0,
-            zoom=12
+            pitch=15,
+            zoom=12.2
         ),
-        margin={"r":0,"t":0,"l":0,"b":0}
+        margin={"r":0,"t":0,"l":0,"b":0},
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
     )
     
     return fig

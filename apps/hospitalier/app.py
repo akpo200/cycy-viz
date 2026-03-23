@@ -1,19 +1,19 @@
 from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
 from .callbacks import register_callbacks
-from utils.data_loader import get_energie_data
+from utils.data_loader import get_hospitalier_data
 
-def init_energie_app(flask_server):
+def init_hospitalier_app(flask_server):
     """
     Initialise le dashboard Dash Bancaire (Mode Clair) avec :
     - Sidebar fixe à gauche
     - 2 onglets principaux : Vue Macro / Analyse Micro
     - Footer avec Copyright
     """
-    df_init = get_energie_data()
+    df_init = get_hospitalier_data()
 
     # --- Chargement Options dropdowns ---
-    bank_options = [{'label': 'Toutes les Opérateurs', 'value': 'TOUTES'}]
+    bank_options = [{'label': 'Toutes les Hôpitals', 'value': 'TOUTES'}]
     if not df_init.empty and 'Sigle' in df_init.columns:
         banks = sorted(df_init['Sigle'].dropna().unique())
         bank_options += [{'label': b, 'value': b} for b in banks]
@@ -33,8 +33,8 @@ def init_energie_app(flask_server):
     dash_app = Dash(
         __name__,
         server=flask_server,
-        url_base_pathname='/energie/',
-        title="Solar Park Analytics",
+        url_base_pathname='/hospitalier/',
+        title="Healthcare Analytics",
         external_stylesheets=[
             dbc.themes.BOOTSTRAP,
             "https://use.fontawesome.com/releases/v5.15.4/css/all.css"
@@ -49,10 +49,10 @@ def init_energie_app(flask_server):
         # --- HEADER ---
         html.Header([
             html.Div([
-                html.Div(html.I(className="fas fa-sun"), className="header-icon"),
+                html.Div(html.I(className="fas fa-hospital"), className="header-icon"),
                 html.Div([
-                    html.H1("Solar Park Analytics"),
-                    html.P("Solar Park Analytics"),
+                    html.H1("Healthcare Analytics"),
+                    html.P("Healthcare Analytics"),
                 ]),
             ], className="header-content")
         ], className="main-header"),
@@ -64,7 +64,7 @@ def init_energie_app(flask_server):
             html.Aside([
                 html.Div([
                     html.Div(html.I(className="fas fa-layer-group"), className="sidebar-logo"),
-                    html.H3("SENELEC INSIGHT", className="sidebar-title"),
+                    html.H3("STATS SÉNÉGAL INSIGHT", className="sidebar-title"),
                     html.P("Données Officielles", className="sidebar-subtitle"),
                 ], className="sidebar-brand"),
 
@@ -78,7 +78,7 @@ def init_energie_app(flask_server):
                 dcc.Dropdown(id='bank-filter', options=[o for o in bank_options if o['value'] != 'TOUTES'], value=focus_default, clearable=False, className="sidebar-dropdown"),
 
                 html.Div([
-                    dcc.Loading(id="loading-pdf", type="circle", color="#ea580c", children=[
+                    dcc.Loading(id="loading-pdf", type="circle", color="#0f766e", children=[
                         dbc.Button([html.I(className="fas fa-file-pdf mr-2"), "Générer Rapport PDF"], id="btn-export-pdf", className="btn-sidebar-pdf w-100"),
                     ]),
                     html.Div(id="report-status", className="text-center mt-3", style={"fontSize": "0.7rem"})
@@ -105,25 +105,25 @@ def init_energie_app(flask_server):
                     ], className="tab-header"),
 
                     dbc.Row([
-                        dbc.Col(html.Div([html.Span("Production (GWh) Total", className="kpi-label"), html.H3(id="kpi-bilan", className="kpi-value"), html.Span(id="kpi-bilan-growth", className="kpi-badge")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Lits Disponibles Total", className="kpi-label"), html.H3(id="kpi-bilan", className="kpi-value"), html.Span(id="kpi-bilan-growth", className="kpi-badge")], className="kpi-card"), md=3),
                         dbc.Col(html.Div([html.Span("Fonds Propres", className="kpi-label"), html.H3(id="kpi-fp", className="kpi-value")], className="kpi-card"), md=3),
-                        dbc.Col(html.Div([html.Span("Capacité Installée", className="kpi-label"), html.H3(id="kpi-ressources", className="kpi-value")], className="kpi-card"), md=3),
-                        dbc.Col(html.Div([html.Span("Nb Opérateurs", className="kpi-label"), html.H3(id="kpi-nb-Opérateurs", className="kpi-value")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Budget", className="kpi-label"), html.H3(id="kpi-ressources", className="kpi-value")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Nb Hôpitals", className="kpi-label"), html.H3(id="kpi-nb-Hôpitals", className="kpi-value")], className="kpi-card"), md=3),
                     ], className="g-3 mb-3"),
 
                     dbc.Row([
-                        dbc.Col(html.Div([html.H5("Évolution du Production (GWh) vs Capacité Installée", className="graph-title"), dcc.Graph(id='fig-line-evolution', config={'displayModeBar': False})], className="graph-card"), md=8),
+                        dbc.Col(html.Div([html.H5("Évolution du Lits Disponibles vs Budget", className="graph-title"), dcc.Graph(id='fig-line-evolution', config={'displayModeBar': False})], className="graph-card"), md=8),
                         dbc.Col(html.Div([html.H5("Parts de Marché", className="graph-title"), dcc.Graph(id='fig-donut-marche', config={'displayModeBar': False})], className="graph-card"), md=4),
                     ], className="g-3 mb-3"),
 
                     dbc.Row([
-                        dbc.Col(html.Div([html.H5("Positionnement (Production (GWh))", className="graph-title"), dcc.Graph(id='fig-scatter-bilan', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=4),
-                        dbc.Col(html.Div([html.H5("Positionnement (Irradiation)", className="graph-title"), dcc.Graph(id='fig-scatter-emploi', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=4),
-                        dbc.Col(html.Div([html.H5("Positionnement (Capacité Installée)", className="graph-title"), dcc.Graph(id='fig-scatter-ressources', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=4),
+                        dbc.Col(html.Div([html.H5("Positionnement (Lits Disponibles)", className="graph-title"), dcc.Graph(id='fig-scatter-bilan', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=4),
+                        dbc.Col(html.Div([html.H5("Positionnement (Patients Admis)", className="graph-title"), dcc.Graph(id='fig-scatter-emploi', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=4),
+                        dbc.Col(html.Div([html.H5("Positionnement (Budget)", className="graph-title"), dcc.Graph(id='fig-scatter-ressources', config={'displayModeBar': False}, style={'height': '350px'})], className="graph-card"), md=4),
                     ], className="g-3 mb-3"),
                     
                     dbc.Row([
-                        dbc.Col(html.Div([html.H5("Classement des Opérateurs (Production (GWh))", className="graph-title"), dcc.Graph(id='fig-bar-classement', config={'displayModeBar': False}, style={'height': '400px'})], className="graph-card"), md=12),
+                        dbc.Col(html.Div([html.H5("Classement des Hôpitals (Lits Disponibles)", className="graph-title"), dcc.Graph(id='fig-bar-classement', config={'displayModeBar': False}, style={'height': '400px'})], className="graph-card"), md=12),
                     ], className="g-3"),
 
                 ], id="tab-content-macro", className="tab-content"),
@@ -132,14 +132,14 @@ def init_energie_app(flask_server):
                 html.Div([
                     html.Div([
                         html.H2(id="micro-title", className="section-heading"),
-                        html.P("Analyse granulaire par Opérateur individuelle", className="section-subheading"),
+                        html.P("Analyse granulaire par Hôpital individuelle", className="section-subheading"),
                     ], className="tab-header"),
 
                     dbc.Row([
-                        dbc.Col(html.Div([html.Span("Production (GWh)", className="kpi-label"), html.H3(id="micro-kpi-bilan", className="kpi-value")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Lits Disponibles", className="kpi-label"), html.H3(id="micro-kpi-bilan", className="kpi-value")], className="kpi-card"), md=3),
                         dbc.Col(html.Div([html.Span("Résultat Net", className="kpi-label"), html.H3(id="micro-kpi-resultat", className="kpi-value")], className="kpi-card"), md=3),
                         dbc.Col(html.Div([html.Span("Fonds Propres", className="kpi-label"), html.H3(id="micro-kpi-fp", className="kpi-value")], className="kpi-card"), md=3),
-                        dbc.Col(html.Div([html.Span("Capacité Installée", className="kpi-label"), html.H3(id="micro-kpi-ressources", className="kpi-value")], className="kpi-card"), md=3),
+                        dbc.Col(html.Div([html.Span("Budget", className="kpi-label"), html.H3(id="micro-kpi-ressources", className="kpi-value")], className="kpi-card"), md=3),
                     ], className="g-3 mb-3"),
 
                     dbc.Row([
