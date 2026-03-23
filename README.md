@@ -1,13 +1,13 @@
 # Sénégal Analytics Platform
 
 > Dashboard multi-secteurs d'analyse financière des données BCEAO, SENELEC et CIMA.  
-> Projet Big Data — Master 2
+> Projet Big Data, Master 2 ISM Par Pascale Nancy Alia AKPO
 
 ---
 
 ## Description
 
-Application web interactive développée avec **Flask + Dash + Python**, permettant l'analyse dynamique des indicateurs financiers du secteur bancaire sénégalais (2015-2022).
+Application web interactive développée avec **Flask + Dash + Python**, permettant l'analyse dynamique des indicateurs financiers du secteur bancaire sénégalais.
 
 Les données proviennent :
 - de la base Excel `BASE_SENEGAL2.xlsx` (24 banques, 2015-2020)
