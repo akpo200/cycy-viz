@@ -67,16 +67,12 @@ banking_dash_project/
 
 ```bash
 # 1. Cloner le dépôt
-git clone https://github.com/<votre-compte>/banking-dash-project.git
-cd banking-dash-project
-
 # 2. Installer les dépendances
 pip install -r requirements.txt
 
 # 3. Lancer l'application
 python app.py
 ```
-
 Ouvrir ensuite **http://localhost:5000** dans le navigateur.
 
 | URL | Description |
@@ -116,11 +112,6 @@ Le module `data_ingestion.py` :
 3. Applique l'OCR via `pytesseract` sur les pages scannées
 4. Stocke le résultat dans MongoDB (`banking_data.historical_data`)
 
-### Stratégie de fallback
-```
-MongoDB (si disponible) → Excel BASE_SENEGAL2.xlsx → Backup 2022 hardcodé
-```
-
 ---
 
 ## Lancer les Tests
@@ -146,7 +137,6 @@ python -m pytest tests/ -v
 
 ---
 
-## Auteur
+## Auteure
 
-Projet réalisé dans le cadre du **Master 2 Big Data** — Université de Dakar  
-Source officielle : [BCEAO — Rapports financiers UMOA](https://www.bceao.int)
+Projet réalisé dans le cadre du **Master 2 Big Data** Par Pascale Nancy Alia AKPO   
