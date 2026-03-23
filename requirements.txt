@@ -11,6 +11,7 @@ gunicorn==23.0.0
 
 # --- Visualisation ---
 plotly==6.5.0
+matplotlib==3.8.4
 
 # --- Données ---
 pandas==2.2.2
